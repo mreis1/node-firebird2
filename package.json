@@ -1,5 +1,5 @@
 {
-  "name": "node-firebird-dev",
+  "name": "node-firebird2",
   "version": "1.3.2",
   "description": "Pure JavaScript and Asynchronous Firebird client for Node.js.",
   "keywords": [
@@ -20,7 +20,8 @@
   "contributors": [
     "Popa Marius Adrian <mapopa@gmail.com>",
     "Peter Širka <petersirka@gmail.com>",
-    "Arnaud Le Roy <https://github.com/sdnetwork>"
+    "Arnaud Le Roy <https://github.com/sdnetwork>",
+    "Marcio Reis <https://marcioreis.pt>"
   ],
   "main": "./lib",
   "licenses": [

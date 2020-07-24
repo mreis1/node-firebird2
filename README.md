@@ -512,6 +512,7 @@ WireCrypt = Disabled
 - Popa Marius Adrian, <https://github.com/mariuz>
 - Peter Širka, <https://github.com/petersirka>
 - Arnaud Le Roy <https://github.com/sdnetwork>
+- Marcio Reis <https://github.com/mreis1>
 
 [license-image]: http://img.shields.io/badge/license-MOZILLA-blue.svg?style=flat
 [license-url]: LICENSE
@@ -519,3 +520,6 @@ WireCrypt = Disabled
 [npm-url]: https://npmjs.org/package/node-firebird
 [npm-version-image]: http://img.shields.io/npm/v/node-firebird.svg?style=flat
 [npm-downloads-image]: http://img.shields.io/npm/dm/node-firebird.svg?style=flat
+
+
+

@@ -2,7 +2,7 @@
 // Project: node-firebird
 // Definitions by: Marco Warm <https://github.com/MarcusCalidus>
 
-declare module 'node-firebird' {
+declare module 'node-firebird2' {
     type DatabaseCallback = (err: any, db: Database) => void;
 
     type TransactionCallback = (err: Options, transaction: Transaction) => void;
@@ -56,4 +56,27 @@ declare module 'node-firebird' {
     export function attachOrCreate(options: Options, callback: DatabaseCallback): void;
     export function pool(max: number,options: Options, callback: DatabaseCallback): ConnectionPool; 
 
+    export namespace Fb2 {
+        export class Db {
+            query<T>(sql: string, params: any[]): Promise<T>;
+            detach(): void;
+            transaction(isolation: any): Promise<Fb2.Transaction>;
+        }
+        export interface PoolResult {
+            // The original pool
+            _pool: any;
+            get: () => Promise<Db>
+        }
+        export function pool(max: number, options: Options): Promise<PoolResult>
+        export class Pool {
+
+        }
+        export class Transaction {
+            query<T>(sql: string, params: any[]): Promise<T>;
+            commit(): Promise<void>;
+            rollback(): Promise<void>;
+        }
+
+        export async function attach(options?: Options): Promise<Db>;
+    }
 }
