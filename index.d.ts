@@ -58,11 +58,12 @@ declare module 'node-firebird2' {
 
     export namespace Fb2 {
         export class Db {
-            query<T>(sql: string, params: any[]): Promise<T>;
+            constructor(db: any)
+            query<T>(sql: string, params?: any[]): Promise<T>;
             detach(): void;
             transaction(isolation: any): Promise<Fb2.Transaction>;
         }
-        export interface PoolResult {
+        export class PoolResult {
             // The original pool
             _pool: any;
             get: () => Promise<Db>
@@ -71,12 +72,13 @@ declare module 'node-firebird2' {
         export class Pool {
 
         }
-        export class Transaction {
-            query<T>(sql: string, params: any[]): Promise<T>;
+        export interface Transaction {
+            constructor(tx: any);
+            query<T>(sql: string, params?: any[]): Promise<T>;
             commit(): Promise<void>;
             rollback(): Promise<void>;
         }
 
-        export async function attach(options?: Options): Promise<Db>;
+        export function attach(options?: Options): Promise<Db>;
     }
 }
