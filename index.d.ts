@@ -75,6 +75,7 @@ declare module 'node-firebird2' {
         export interface Transaction {
             constructor(tx: any);
             query<T>(sql: string, params?: any[]): Promise<T>;
+            execute<T>(sql: string, params?: any[]): Promise<T>;
             commit(): Promise<void>;
             rollback(): Promise<void>;
         }
