@@ -89,7 +89,9 @@ declare module 'node-firebird2' {
             query<T>(sql: string, params?: any[]): Promise<T>;
             execute<T>(sql: string, params?: any[]): Promise<T>;
             commit(): Promise<void>;
-            rollback(): Promise<void>;
+            commitRetaining(): Promise<void>;
+            rollback(options?: { resolveError?: boolean }): Promise<void>;
+            rollbackRetaining(options?: { resolveError?: boolean }): Promise<void>;
         }
 
         export function attach(options?: Options): Promise<Db>;
