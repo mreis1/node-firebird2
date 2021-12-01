@@ -10,9 +10,21 @@ declare module 'node-firebird2' {
     type SimpleCallback = (err: any) => void;
     type SequentialCallback = (row: any, index: number, next: any) => void;
 
+    /** A transaction sees changes done by uncommitted transactions. */
     export const ISOLATION_READ_UNCOMMITTED: number[];
+    /** A transaction sees changes done by uncommitted transactions. 
+     *  Note: Won't wait for external transactions to complete before doing what it has to do. 
+     *        Instead, will return the latest value.
+     **/
+    export const ISOLATION_READ_COMMITED_NOWAIT: number[];
+    /** A transaction sees only data committed before the statement has been executed. */
     export const ISOLATION_READ_COMMITED: number[];
+    /** A transaction sees during its lifetime only data committed before the transaction has been started. */
     export const ISOLATION_REPEATABLE_READ: number[];
+    /**
+    * This is the strictest isolation level, which enforces transaction serialization.
+    * Data accessed in the context of a serializable transaction cannot be accessed by any other transaction.
+    */
     export const ISOLATION_SERIALIZABLE: number[];
     export const ISOLATION_READ_COMMITED_READ_ONLY: number[];
 
