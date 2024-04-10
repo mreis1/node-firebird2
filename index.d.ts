@@ -46,6 +46,38 @@ declare module 'node-firebird2' {
         sequentially(query: string, params: any[], rowCallback: SequentialCallback, callback: SimpleCallback, asArray?: boolean): void;
     }
 
+    //https://github.com/hgourvest/node-firebird/commit/999f5399c32e7364c5d32fe9e1228d37b943f2a4
+    export type SupportedCharacterSet = |
+        'NONE' |
+        'CP943C' |
+        'DOS737' |
+        'DOS775' |
+        'DOS858' |
+        'DOS862' |
+        'DOS864' |
+        'DOS866' |
+        'DOS869' |
+        'GB18030' |
+        'GBK' |
+        'ISO8859_2' |
+        'ISO8859_3' |
+        'ISO8859_4' |
+        'ISO8859_5' |
+        'ISO8859_6' |
+        'ISO8859_7' |
+        'ISO8859_8' |
+        'ISO8859_9' |
+        'ISO8859_13' |
+        'KOI8R' |
+        'KOI8U' |
+        'TIS620' |
+        'UTF8' |
+        'WIN1255' |
+        'WIN1256' |
+        'WIN1257' |
+        'WIN1258' |
+        'WIN_1258';
+
     export interface Options {
         host?: string;
         port?: number;
@@ -54,7 +86,8 @@ declare module 'node-firebird2' {
         password?: string;
         lowercase_keys?: boolean;
         role?: string;           
-        pageSize?: number; 
+        pageSize?: number;
+        encoding?: SupportedCharacterSet;
     }
 
     export interface ConnectionPool {

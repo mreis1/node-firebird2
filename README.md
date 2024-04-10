@@ -8,6 +8,47 @@
 
 Pure JavaScript and Asynchronous Firebird client for Node.js. [Firebird forum](https://groups.google.com/forum/#!forum/node-firebird) on Google Groups.
 
+```markdown
+*********************************************
+This lib exposes a promise API around the implementation of sdnetwork (https://www.npmjs.com/package/node-firebird-dev) 
+
+import {promises: fb} from 'node-firebird2'
+await fb.attach(config)
+await fb.query(query)
+const tx = await fb.transaction(ISOLATION_XXXX)
+const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');c
+console.log(rows) // []
+await tx.restart('auto') // restart the transaction using the same connection and isolation strategy
+await tx.restart(SIOLATION_XXX) // restarts the transaction using a different strategy
+const query = 'INSERT INTO CONFIGURATION (CONF_ID, CONF_CLE, CONF_VALEUR, CONF_INTERNE, CONF_CENTRE) ' +
+' VALUES (NEXT VALUE FOR IDGENERIQUE, \'TEST_\' || CURRENT_TIMESTAMP, \'-1\', 0, null) RETURNING CONF_ID';
+const res = await tx.query(query);
+console.log(res); // {CONF_ID: 127312312 };
+const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');c
+console.log(rows) // []
+....
+
+Events: (requires local database)
+
+const evtmgr = await fb.attachEvent();
+evtmgr.on("post_event", function (name, count) {
+    console.log("Event fired: ", name, count);
+});
+
+// register events
+evtmgr.registerEvent(['evt1', 'evt2'], async function (err) {
+    console.log('ready to receive evt1 and evt2')
+})
+
+// stop tracking a particular event
+evtmgr.unregisterEvent(["evt1"], function (err) {
+    console.log('remove evt1, after that you only receive evt2')
+})
+
+*********************************************
+```
+
+
 __Firebird database on social networks__
 
 - [Firebird on Google+](https://plus.google.com/111558763769231855886/posts)
@@ -53,6 +94,11 @@ npm install node-firebird2
 ```js
 var Firebird = require('node-firebird2');
 ```
+
+## Usage (Promises)
+
+
+## Usage (Legacy)
 
 ### Methods
 
