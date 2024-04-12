@@ -12,8 +12,8 @@ declare module 'node-firebird2' {
 
     /** A transaction sees changes done by uncommitted transactions. */
     export const ISOLATION_READ_UNCOMMITTED: number[];
-    /** A transaction sees changes done by uncommitted transactions. 
-     *  Note: Won't wait for external transactions to complete before doing what it has to do. 
+    /** A transaction sees changes done by uncommitted transactions.
+     *  Note: Won't wait for external transactions to complete before doing what it has to do.
      *        Instead, will return the latest value.
      **/
     export const ISOLATION_READ_COMMITED_NOWAIT: number[];
@@ -22,9 +22,9 @@ declare module 'node-firebird2' {
     /** A transaction sees during its lifetime only data committed before the transaction has been started. */
     export const ISOLATION_REPEATABLE_READ: number[];
     /**
-    * This is the strictest isolation level, which enforces transaction serialization.
-    * Data accessed in the context of a serializable transaction cannot be accessed by any other transaction.
-    */
+     * This is the strictest isolation level, which enforces transaction serialization.
+     * Data accessed in the context of a serializable transaction cannot be accessed by any other transaction.
+     */
     export const ISOLATION_SERIALIZABLE: number[];
     export const ISOLATION_READ_COMMITED_READ_ONLY: number[];
 
@@ -85,28 +85,44 @@ declare module 'node-firebird2' {
         user?: string;
         password?: string;
         lowercase_keys?: boolean;
-        role?: string;           
+        role?: string;
         pageSize?: number;
         encoding?: SupportedCharacterSet;
     }
 
     export interface ConnectionPool {
         get(callback: DatabaseCallback): void;
-        destroy(): void; 
+        destroy(): void;
     }
-    
-    export function attach(options: Options, callback: DatabaseCallback): void; 
-    export function escape(value: string): string;
-    export function create(options: Options, callback: DatabaseCallback): void; 
-    export function attachOrCreate(options: Options, callback: DatabaseCallback): void;
-    export function pool(max: number,options: Options, callback: DatabaseCallback): ConnectionPool; 
 
-    export namespace Fb2 {
+    export function attach(options: Options, callback: DatabaseCallback): void;
+    export function escape(value: string): string;
+    export function create(options: Options, callback: DatabaseCallback): void;
+    export function attachOrCreate(options: Options, callback: DatabaseCallback): void;
+    export function pool(max: number,options: Options, callback: DatabaseCallback): ConnectionPool;
+
+    export namespace promises {
+        export function setDebug(debugFn: (...args) => any | void)
+        export type ReadBlobEncoding = 'buffer' | 'utf8';
+        export interface ReadBlobOpts {
+            /**
+             * @default: Buffer
+             */
+            encoding?: ReadBlobEncoding;
+            /**
+             * @default false
+             */
+            transliterate?: boolean;
+        }
+        export function readBlob<T extends ReadBlobOpts>(col, opts?: T): Promise< T['encoding'] extends 'utf8' ? string : Buffer>;
+        export function transliterate<T extends boolean>(data: Buffer | string, returnAsBuff: T): T extends true ? Buffer : string;
         export class Db {
             constructor(db: any)
             query<T>(sql: string, params?: any[]): Promise<T>;
             detach(): void;
-            transaction(isolation: any): Promise<Fb2.Transaction>;
+            transaction(isolation: any): Promise<promises.Transaction>;
+            attachEvent(): Promise<any>;
+            readBlob<T extends ReadBlobOpts>(col, opts?: T): Promise< T['encoding'] extends 'utf8' ? string : Buffer>;
         }
         export class PoolResult {
             // The original pool
@@ -114,6 +130,7 @@ declare module 'node-firebird2' {
             get: () => Promise<Db>
         }
         export function pool(max: number, options: Options): Promise<PoolResult>
+
         export class Pool {
 
         }
@@ -125,6 +142,12 @@ declare module 'node-firebird2' {
             commitRetaining(): Promise<void>;
             rollback(options?: { resolveError?: boolean }): Promise<void>;
             rollbackRetaining(options?: { resolveError?: boolean }): Promise<void>;
+            readBlob<T extends ReadBlobOpts>(col, opts?: T): Promise< T['encoding'] extends 'utf8' ? string : Buffer>;
+            /**
+             * @default: 'auto' -> latest isolation is used otherwise defaults to READ_ONLY isolation
+             * @param isolation
+             */
+            restart(isolation?: 'auto' | any): Promise<void>;
         }
 
         export function attach(options?: Options): Promise<Db>;

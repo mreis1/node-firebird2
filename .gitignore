@@ -1,3 +1,4 @@
 test/*.fdb
 *.fdb
 node_modules/
+.safe/
