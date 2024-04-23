@@ -28,7 +28,28 @@ declare module 'node-firebird2' {
     export const ISOLATION_SERIALIZABLE: number[];
     export const ISOLATION_READ_COMMITED_READ_ONLY: number[];
 
-    export type Isolation = number[];
+    export interface TransactionOptions {
+        /**
+         * If unspecified: Firebird.DEFAULT_ISOLATION is used.
+         */
+        isolation?: number[];
+        /**
+         * @default - uses the target isolation settings
+         */
+        write?: boolean;
+        /**
+         * Sets the appropriate flag to the wait mode.
+         * @default - uses the target isolation settings
+         */
+        wait?: boolean;
+        /**
+         * Only applies to transactions with WRITE + WAIT mode
+         * Otherwise it will be ignored
+         * @default Waits for locking resource to be released (may take forever to happen so be careful)
+         */
+        lockTimeout?: number;
+    }
+    export type Isolation = number[] | TransactionOptions;
 
     export interface Database {
         detach(callback?: SimpleCallback): void;
