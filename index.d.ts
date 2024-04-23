@@ -17,6 +17,7 @@ declare module 'node-firebird2' {
      *        Instead, will return the latest value.
      **/
     export const ISOLATION_READ_COMMITED_NOWAIT: number[];
+    export const ISOLATION_READ_COMMITED_READ_ONLY_NOWAIT: number[];
     /** A transaction sees only data committed before the statement has been executed. */
     export const ISOLATION_READ_COMMITED: number[];
     /** A transaction sees during its lifetime only data committed before the transaction has been started. */
@@ -27,6 +28,7 @@ declare module 'node-firebird2' {
      */
     export const ISOLATION_SERIALIZABLE: number[];
     export const ISOLATION_READ_COMMITED_READ_ONLY: number[];
+    export const DEFAULT_ISOLATION: number[];
 
     export interface TransactionOptions {
         /**
