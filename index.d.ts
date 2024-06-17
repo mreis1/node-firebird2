@@ -32,21 +32,27 @@ declare module 'node-firebird2' {
 
     export interface TransactionOptions {
         /**
-         * If unspecified: Firebird.DEFAULT_ISOLATION is used.
+         * If unspecified a copy of `Firebird.DEFAULT_ISOLATION` will be used.
          */
         isolation?: number[];
         /**
          * @default - uses the target isolation settings
          */
-        write?: boolean;
+        mode?: 'write' | 'read';
+        /**
+         * false    -> no_rec_version   - the most recent commited state of database will be used
+         * true     -> rec_version      - a snapshot representing the state of the db upon transaction start.
+         */
+        rec?: boolean;
         /**
          * Sets the appropriate flag to the wait mode.
          * @default - uses the target isolation settings
          */
         wait?: boolean;
         /**
-         * Only applies to transactions with WRITE + WAIT mode
-         * Otherwise it will be ignored
+         * Prescribes the maximum number of seconds that the transaction should wait when a lock conflict occurs
+         * Requires transactions with `wait: true`
+         *
          * @default Waits for locking resource to be released (may take forever to happen so be careful)
          */
         lockTimeout?: number;
