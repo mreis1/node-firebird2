@@ -29,7 +29,7 @@ Promise.all([
         lockTimeout: 2
     }); // <-- start with readonly tx.
     const tx3 = await con2.transaction({
-        isolation: fb.ISOLATION_READ_COMMITED_READ_ONLY_NOWAIT, // <-- optional since this is the default isolation
+        isolation: fb.ISOLATION_READ_COMMITED_READ_ONLY, // <-- optional since this is the default isolation
         // wait: false
     }); // <-- start with readonly tx.
 
