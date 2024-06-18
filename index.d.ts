@@ -56,7 +56,31 @@ declare module 'node-firebird2' {
          */
         lockTimeout?: number;
     }
-    export type Isolation = number[] | TransactionOptions;
+    // export type Isolation = number[] | TransactionOptions;
+
+    export class Isolation {
+        /**
+         * Isolation configuration.
+         * @typedef {number[] | TransactionOptions} Config
+         * @property {number[]} [isolation] - If unspecified, a copy of `Firebird.DEFAULT_ISOLATION` will be used.
+         * @property {'write' | 'read'} [mode] - @default Uses the target isolation settings.
+         * @property {boolean} [rec] - false: no_rec_version - the most recent committed state of the database will be used.
+         *                              true: rec_version - a snapshot representing the state of the db upon transaction start.
+         * @property {boolean} [wait] - Sets the appropriate flag to the wait mode. @default Uses the target isolation settings.
+         * @property {number} [lockTimeout] - Prescribes the maximum number of seconds that the transaction should wait when a lock conflict occurs.
+         *                                    Requires transactions with `wait: true`. @default Waits 5s - if resource is not locked during this time it will cause a DEADLOCK
+         *
+         * @param {Config} isolationOrOptions - The configuration for the transaction, either an array of numbers or a TransactionOptions object.
+         * @returns {Config} The configuration used for the transaction.
+         */
+        constructor(isolationOrOptions: number[] | TransactionOptions);
+
+        isolation: number[];
+        mode: 'write' | 'read';
+        rec: boolean;
+        wait: boolean;
+        lockTimeout: number | null;
+    }
 
     export interface Database {
         detach(callback?: SimpleCallback): void;
