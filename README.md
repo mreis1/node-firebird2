@@ -8,34 +8,63 @@
 
 Pure JavaScript and Asynchronous Firebird client for Node.js. [Firebird forum](https://groups.google.com/forum/#!forum/node-firebird) on Google Groups.
 
-```markdown
-*********************************************
-This lib exposes a promise API around the implementation of sdnetwork (https://www.npmjs.com/package/node-firebird-dev) 
+## ABOUT THIS FORK
 
-import {promises: fb} from 'node-firebird2'
-await fb.attach(config)
-await fb.query(query)
-const tx = await fb.transaction(ISOLATION_XXXX)
-const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');
-console.log(rows) // []
-await tx.restart('auto') // restart the transaction using the same connection and isolation strategy
-await tx.restart(SIOLATION_XXX) // restarts the transaction using a different strategy
+This lib exposes a promise API around the implementation of `sdnetwork` (https://www.npmjs.com/package/node-firebird-dev)
+
+> DISCLAIMER
+> I assume I'm the only one using this fork. 
+> I'm not using a semVersion and even minor changes can introduce breaking changes. 
+> So, if you plan to use the lib, let me know ;-)
+
+Here's how it may be used: 
+
+```markdown
+import {promises: Fb} from 'node-firebird2'
+
+const connectOpts = {
+    host: '127.0.0.1',
+    port: 3050,
+    database: 'database.fdb',
+    user: 'SYSDBA',
+    password: 'masterkey',
+    lowercase_keys: false,      // set to true to lowercase keys
+    role: null,                 // default
+    pageSize: 4096              // default when creating database
+}
+
+const con = await Fb.attach(connectOpts)
+await con.query(query)
+
+const tx = await con.transaction(new Isolation({ mode: 'read',.... }));
+
+const rows1 = await tx.query('SELECT FIRST 1 1 FROM RDB$DATABASE);
+console.log(rows1) // [{"CONSTANT": 1}]
+
+await tx.restart() // restart the transaction using the same connection and isolation strategy used for starting the transaction
+
+await tx.restart(new Isolation({ mode: 'write', .... })) // restarts the existing transaction (committing it first) using a different strategy
+
 const query = 'INSERT INTO CONFIGURATION (CONF_ID, CONF_CLE, CONF_VALEUR, CONF_INTERNE, CONF_CENTRE) ' +
 ' VALUES (NEXT VALUE FOR IDGENERIQUE, \'TEST_\' || CURRENT_TIMESTAMP, \'-1\', 0, null) RETURNING CONF_ID';
-const res = await tx.query(query);
-console.log(res); // {CONF_ID: 127312312 };
-const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');c
-console.log(rows) // []
-....
 
-Events: (requires local database)
+const rows2 = await tx.query(query);
+console.log(rows2); // [{CONF_ID: 127312312 }];
+```
 
-const evtmgr = await fb.attachEvent();
+### DB Events 
+⚠️ only works if you are running your app on the same machine that hosts the database 
+
+```
+const con = await Fb.attach(connectOpts)
+const evtmgr = await con.attachEvent(); // start event manager
+
+// listen to events
 evtmgr.on("post_event", function (name, count) {
     console.log("Event fired: ", name, count);
 });
 
-// register events
+// register the events that you want to listen to
 evtmgr.registerEvent(['evt1', 'evt2'], async function (err) {
     console.log('ready to receive evt1 and evt2')
 })
@@ -44,20 +73,31 @@ evtmgr.registerEvent(['evt1', 'evt2'], async function (err) {
 evtmgr.unregisterEvent(["evt1"], function (err) {
     console.log('remove evt1, after that you only receive evt2')
 })
-
 *********************************************
 ```
 
-## Samples
+## Test & Samples
 
+1. Configure you config.js with your own environment settings 
+2. Run the scripts as follow: 
 ```
+# node <path_to_script> <env>
+
 node test/mr/01_02-connect_and_start_tx.js vm1
 ```
 
 `vm1` is a conf key in [config.js](test%2Fmr%2Fcommon%2Fconfig.js) and stands for the target execution environement. 
 
-> NOTE: setup the environment variables with your own settings
+# TODO LIST
 
+The todo list is available here
+
+👉👉 [TODO_LIST.md](TODO_LIST.md)
+
+
+
+
+# Legacy README
 
 
 __Firebird database on social networks__
