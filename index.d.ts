@@ -27,7 +27,6 @@ declare module 'node-firebird2' {
      */
     export const ISOLATION_SERIALIZABLE: number[];
     export const ISOLATION_READ_COMMITED_READ_ONLY: number[];
-    export const DEFAULT_ISOLATION: number[];
 
     export interface TransactionOptions {
         /**

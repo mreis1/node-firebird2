@@ -16,7 +16,7 @@ import {promises: fb} from 'node-firebird2'
 await fb.attach(config)
 await fb.query(query)
 const tx = await fb.transaction(ISOLATION_XXXX)
-const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');c
+const rows = await tx.query('SELECT 1 1 FROM RDB$DATABASE');
 console.log(rows) // []
 await tx.restart('auto') // restart the transaction using the same connection and isolation strategy
 await tx.restart(SIOLATION_XXX) // restarts the transaction using a different strategy
@@ -47,6 +47,17 @@ evtmgr.unregisterEvent(["evt1"], function (err) {
 
 *********************************************
 ```
+
+## Samples
+
+```
+node test/mr/01_02-connect_and_start_tx.js vm1
+```
+
+`vm1` is a conf key in [config.js](test%2Fmr%2Fcommon%2Fconfig.js) and stands for the target execution environement. 
+
+> NOTE: setup the environment variables with your own settings
+
 
 
 __Firebird database on social networks__
@@ -390,8 +401,8 @@ Firebird.attach(options, function(err, db) {
 
     });
 
-    db.on('transaction', function(isolation) {
-        // isolation === Number
+    db.on('transaction', function(isolation: Isolation) {
+        // console.log(isolation) ---> Isolation { mode: 'write', ..... }
     });
 
     db.on('commit', function() {
