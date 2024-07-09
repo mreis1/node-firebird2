@@ -25,7 +25,11 @@ prepareTestStructure(c)
             logFb(err)
         }
 
-        await delay(5000)
+        // § await delay(0)
+        //      Without this line, the statement below would trigger
+        //      `❌335544327 invalid request handle`
+        // to fix this problem
+        // await delay(0)
         try {
             const res4 = await tx.query(`INSERT INTO XTEST2(XTL2_ID, XTL2_IDXTL) VALUES (2, 1) RETURNING XTL2_ID`);
             console.log({res4});
