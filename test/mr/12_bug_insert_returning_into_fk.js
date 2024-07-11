@@ -6,12 +6,24 @@ const {delay} = require("./common/delay");
 const c = config[process.argv[2]];
 
 fb.promises.debug = function () {
-    console.log(`[debug]`, arguments)
+    console.log(`[debug]`, ...arguments)
 }
+
+/**
+ * ██████╗ ██╗   ██╗ ██████╗
+ * ██╔══██╗██║   ██║██╔════╝
+ * ██████╔╝██║   ██║██║  ███╗
+ * ██╔══██╗██║   ██║██║   ██║
+ * ██████╔╝╚██████╔╝╚██████╔╝
+ * ╚═════╝  ╚═════╝  ╚═════╝
+ * On the execution below we'll get invalid handle request if await delay(0) is not specified.
+ * I managed to make this optional by using a setTimeout directly but the solution is not elegant enough and i decided to disable it
+ * in index.js (query and execute methods) of transaction
+ */
 prepareTestStructure(c)
     .then(async () => {
         const con = await fb.promises.attach(c);
-        const tx = await con.transaction(fb.ISOLATION_READ_COMMITED); // <-- start with readonly tx.
+        const tx = await con.transaction(fb.ISOLATION_READ_COMMITED_READ_ONLY); // <-- start with readonly tx.
         const res = await tx.query('SELECT * FROM XTEST')
         console.log({res})
         const res2 = await tx.query(`INSERT INTO XTEST(XTL_ID, XTL_VALUE) VALUES (1, 'SUPER TEST') RETURNING XTL_ID`);
@@ -29,8 +41,9 @@ prepareTestStructure(c)
         //      Without this line, the statement below would trigger
         //      `❌335544327 invalid request handle`
         // to fix this problem
-        // await delay(0)
+        await delay(0)
         try {
+
             const res4 = await tx.query(`INSERT INTO XTEST2(XTL2_ID, XTL2_IDXTL) VALUES (2, 1) RETURNING XTL2_ID`);
             console.log({res4});
         } catch (err) {

@@ -8,6 +8,17 @@ const c = config[process.argv[2]];
 fb.promises.debug = function () {
     console.log(`[debug]`, arguments)
 }
+/**
+ * ██████╗ ██╗   ██╗ ██████╗
+ * ██╔══██╗██║   ██║██╔════╝
+ * ██████╔╝██║   ██║██║  ███╗
+ * ██╔══██╗██║   ██║██║   ██║
+ * ██████╔╝╚██████╔╝╚██████╔╝
+ * ╚═════╝  ╚═════╝  ╚═════╝
+ *
+ * Line 43: Driver would hang for undetermined time.
+ *
+ */
 prepareTestStructure(c)
     .then(async () => {
         const con = await fb.promises.attach(c);
@@ -47,14 +58,15 @@ prepareTestStructure(c)
              *     at readableAddChunk (node:internal/streams/readable:289:9)
              *     at Socket.Readable.push (node:internal/streams/readable:228:10)
              *
-             *  As a temporary workaround
+             *  As a temporary workaround I modified the index.js to prevent the above error from occurring
+             *  which lead to no uncaught exceptions but resulted in `Invalid handle` from database
              *
              */
         } catch (err) {
             logFb(err)
         }
 
-
+        await tx.commit();
         con.detach()
     })
     .catch(logFb)
