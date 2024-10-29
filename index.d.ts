@@ -164,6 +164,11 @@ declare module 'node-firebird2' {
              * @default false
              */
             transliterate?: boolean;
+            /**
+             * based on https://github.com/hgourvest/node-firebird?tab=readme-ov-file#reading-multiples-blobs-asynchronous
+             * @default: true
+             */
+            async?: boolean;
         }
         export function readBlob<T extends ReadBlobOpts>(col, opts?: T): Promise< T['encoding'] extends 'utf8' ? string : Buffer>;
         export function transliterate<T extends boolean>(data: Buffer | string, returnAsBuff: T): T extends true ? Buffer : string;
