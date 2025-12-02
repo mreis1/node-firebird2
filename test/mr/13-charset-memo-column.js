@@ -3,7 +3,7 @@
  *
  * ```
  * $ cd ./test/mr
- * $ FB_HOST= FB_DB= node 12-charset-none-transcoder.js --fetchSize=2 --rows=2 --seq
+ * $ FB_HOST= FB_DB= node 12-charset-none-transcoder.js --fetchSize=2 --rows=2
  *
  * === Charset NONE: UTF8 <> WIN1252 (inserting 2 rows | fetching 2 rows) ===
  *
@@ -126,20 +126,9 @@ const win1252_extra_chars = [
 const tableName = 'test_blob_utf_win1252_1'
 
 
-const sampleTextPath = path.join(__dirname, '../sample.txt');
-const samplePdfPath = path.join(__dirname, '../sample.pdf');
-const REFERENCE_NAME = win1252_extra_chars.join('');
-const referenceBlobs = mode === 1 ? {
-    DATA: fs.readFileSync(sampleTextPath),
-    DATA2: fs.readFileSync(samplePdfPath)
-} : null;
-
-const hashBuffer = (buffer) => crypto.createHash('sha1').update(buffer).digest('hex');
-const describeBlob = (value) => Buffer.isBuffer(value) ? `${value.length} bytes (buffer)` : `${(value?.length || 0)} bytes (${typeof value})`;
 
 
-
-console.log(`=== Charset NONE: UTF8 <> WIN1252 (inserting ${numRows} rows | fetching ${fetchSize} rows | table ${tableName}) ===\n`);
+console.log(`=== Charset NONE: UTF8 <> WIN1252 (inserting ${numRows} rows | fetching ${fetchSize} rows) ===\n`);
 
 // €‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ
 
@@ -159,116 +148,47 @@ fb.attach(options, (err, db) => {
 
     console.log('✅ Connected');
 
-
     db.transaction(fb.ISOLATION_READ_COMMITED, (err, tx) => {
         if (err) throw err;
-        const querySelect = () => {
-            let promStack = []
-            // Query back all rows
-            // tx.query(`SELECT first ${fetchSize} * FROM ${tableName} WHERE NAME=?`, [REFERENCE_NAME], async (err, rows) => {
-            tx.query(`SELECT first ${fetchSize} * FROM ${tableName} WHERE NAME='${REFERENCE_NAME}'`, [], async (err, rows) => {
-                if (err) return delayExit(1, err);
 
-                console.log(`\n✅ Selected ${rows.length} rows`);
+        tx.query(`SELECT first ${fetchSize} * FROM PSALE_ARTICLE WHERE PSART_ID=?`, [1003001237675], async (err, rows) => {
+            if (err) return delayExit(1, err);
 
+            console.log(`\n✅ Selected ${rows.length} rows`);
 
-
-
-                if (!process.argv.includes('--skip-blob-fetching')) {
-                    const fetchStart = Date.now();
-                    if (process.argv.includes('--seq')) {
-                        // Sequential BLOB fetching - one at a time
-                        await loadBlobs(rows, tx);
-                    } else {
-                        // Parallel BLOB fetching - all at once
-                        await loadBlobsParallel(rows, tx);
-                    }
-                    const fetchEnd = Date.now();
-                    console.log(`⏱️  BLOB fetch took ${(fetchEnd - fetchStart) / 1000}s`);
-                    const integrityIssues = verifyIntegrity(rows);
-                    if (integrityIssues.length) {
-                        console.warn('❌ BLOB integrity issues detected:', integrityIssues);
-                    } else {
-                        console.log('✅ BLOB content verified (SHA-1)');
-                    }
+            if (!process.argv.includes('--skip-blob-fetching')) {
+                const fetchStart = Date.now();
+                if (process.argv.includes('--seq')) {
+                    // Sequential BLOB fetching - one at a time
+                    await loadBlobs(rows, tx);
+                } else {
+                    // Parallel BLOB fetching - all at once
+                    await loadBlobsParallel(rows, tx);
                 }
-
-                console.log({rows})
-
-                // Cleanup and exit
-                tx.commit((err) => {
-                    if (err) return delayExit(1, err);
-                    let end = Date.now()
-                    console.log(end-start)
-                    db.detach((err) => {
-                        if (err) return delayExit(1, err);
-                        console.log('✅ Test completed successfully');
-                        process.exit(0);
-                    });
-                });
-            });
-        }
-        const handleInserts = () => {
-            // Insert BLOBs dynamically based on numRows
-            let count = 0;
-            const _insertExec = (cb) => {
-                count++;
-                tx.query(`INSERT INTO ${tableName} (id, name, data2, data) VALUES (?, ?, ?, ?)`,
-                    [count, REFERENCE_NAME, fs.createReadStream(sampleTextPath), fs.createReadStream(samplePdfPath)],
-                    (...args) => {
-                        console.log('✅ Inserted row #' + count + '.');
-                        cb(...args);
-                    });
-            };
-
-            // Recursive function to insert N rows
-            const insertRows = (remaining, finalCallback) => {
-                if (remaining === 0) {
-                    return finalCallback();
+                const fetchEnd = Date.now();
+                console.log(`⏱️  BLOB fetch took ${(fetchEnd - fetchStart) / 1000}s`);
+                const integrityIssues = verifyIntegrity(rows);
+                if (integrityIssues.length) {
+                    console.warn('❌ BLOB integrity issues detected:', integrityIssues);
+                } else {
+                    console.log('✅ BLOB content verified (SHA-1)');
                 }
-                _insertExec((err) => {
-                    if (err) return delayExit(1, err);
-                    insertRows(remaining - 1, finalCallback);
-                });
-            };
+            }
 
+            console.log({rows})
 
-            // Trace: ❌ Error [GDSError]: Cannot transliterate character between character sets
-
-            // Start inserting
-            insertRows(numRows, () => {
-                console.log(`✅ ${numRows} BLOBs inserted. Committing...`);
-
-                tx.commitRetaining((err) => {
-                    if (err) return delayExit(1, err);
-                    console.log('✅ All rows committed');
-                    querySelect()
-                });
-            });
-        }
-        if (process.argv.find(v => v === '--noRecreate')) {
-            if (process.argv.find(v => v === '--fetchOnly'))
-                querySelect()
-            else
-                handleInserts()
-
-
-
-        } else {
-            console.log('[ ] Recreate table')
-            // Create table
-            tx.query(`RECREATE TABLE ${tableName} (id Integer, name varchar(100), data2 BLOB SUB_TYPE 1, data BLOB SUB_TYPE 0)`, (err) => {
+            // Cleanup and exit
+            tx.commit((err) => {
                 if (err) return delayExit(1, err);
-
-                console.log('✅ Table created');
-                tx.commitRetaining((err) => {
+                let end = Date.now()
+                console.log(end-start)
+                db.detach((err) => {
                     if (err) return delayExit(1, err);
-                    console.log('✅ Table committed');
-
-                    handleInserts()
+                    console.log('✅ Test completed successfully');
+                    process.exit(0);
                 });
             });
-        }
+        })
     });
 });
 
@@ -290,8 +210,15 @@ function readBlob(blobFn, columnName, rowIndex, tx) {
             event.on('data', chunk => {
                 chunks.push(Buffer.from(chunk));
             });
+            let isText = false, textValue;
+            event.on('text', (value) => {
+                isText = true;
+                textValue = value;
+                resolve({ buffer: Buffer.from(value), column: columnName, row: rowIndex });
+            });
             event.on('end', () => {
-                resolve({ buffer: Buffer.concat(chunks), column: columnName, row: rowIndex });
+                if (!isText)
+                    resolve({ buffer: Buffer.concat(chunks), column: columnName, row: rowIndex });
             });
             event.on('error', reject);
         });
@@ -320,7 +247,8 @@ async function loadBlobs(rows, tx) {
             row } = await b();
         console.log(`Row=${row} Column=${column} took ${(Date.now()-s)/1000}s to load. Size=${buffer.length}`);
         fs.writeFileSync(`t_row_${row}_${column}`, buffer, { encoding: 'binary' });
-        rows[row][column] = buffer;
+        // rows[row][column] = transcodeAdapter.text.fromDb(buffer);
+        rows[row][column] = buffer.toString('utf8')
     }
 
     return rows;
@@ -369,7 +297,7 @@ function verifyIntegrity(rows) {
 
     rows.forEach((row) => {
         ['DATA', 'DATA2'].forEach((column) => {
-            if (column in row && row[column] !== null) {
+            if (column in row) {
                 const actual = row[column];
                 const expectedBuf = expectedBlobValues?.[column];
 
