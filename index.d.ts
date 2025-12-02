@@ -139,6 +139,14 @@ declare module 'node-firebird2' {
         role?: string;
         pageSize?: number;
         encoding?: SupportedCharacterSet;
+        transcodeAdapter?: TranscodeAdapter;
+    }
+
+    export interface TranscodeAdapter {
+        text?: {
+            fromDb?: (buffer: any/*Buffer*/) => any;
+            toDb?: (value: any/*string*/) => any/*Buffer*/;
+        };
     }
 
     export interface ConnectionPool {

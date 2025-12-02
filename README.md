@@ -1,9 +1,9 @@
-![Firebird Logo](https://www.totaljs.com/exports/firebird-logo.png)
+![Firebird Logo](https://www.firebirdsql.org/file/about/firebird-logo-90.png)
 
 [![NPM version][npm-version-image]][npm-url] [![NPM downloads][npm-downloads-image]][npm-url] [![Mozilla License][license-image]][license-url]
-[![Build Status](https://travis-ci.org/mariuz/node-firebird.svg?branch=master)](https://travis-ci.org/mariuz/node-firebird)
 
-[![NPM](https://nodei.co/npm/node-firebird.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-firebird/) [![NPM](https://nodei.co/npm-dl/node-firebird.png?months=6&height=3)](https://nodei.co/npm/node-firebird/)
+
+[![NPM](https://nodei.co/npm/node-firebird2.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-firebird2/) [![NPM](https://nodei.co/npm-dl/node-firebird2.png?months=6&height=3)](https://nodei.co/npm/node-firebird2/)
 # Pure JavaScript Firebird client for Node.js.
 
 Pure JavaScript and Asynchronous Firebird client for Node.js. [Firebird forum](https://groups.google.com/forum/#!forum/node-firebird) on Google Groups.
@@ -177,6 +177,38 @@ options.pageSize = 4096;        // default when creating database
 
 ```
 
+### Charset & transcode adapter (new behavior)
+
+Setting `options.charset`/`options.encoding` (uppercase normalized for Firebird) lets you configure `isc_dpb_lc_ctype`/`isc_dpb_set_db_charset`. When that value is `"NONE"` and you supply a `transcodeAdapter.text` with `fromDb`/`toDb`, every textual payload—including the SQL text of prepared statements—is encoded via `toDb` before `msg.addString` and decoded via `fromDb` when reading text columns or TEXT BLOBs. This guarantees your literal `WHERE NAME='%€%'` query and any `"WIN1252"` data round-trip correctly instead of defaulting to UTF-8.
+
+This is especially relevant for databases and columns defined as `CHARSET NONE` while they actually store bytes in a legacy 8‑bit codepage such as WIN1252. Without this change the driver would send UTF-8 literals to the wire (e.g. the three-byte sequence for `€`) while the server expects the two-byte WIN1252 value, so filters like `WHERE NAME='%€%'` would never match. With the adapter, both the SQL text and the row payloads are kept in sync with the real byte encoding IDB uses.
+
+#### Demo
+
+```js
+const iconv = require('iconv-lite');
+
+const transcodeAdapter = {
+  text: {
+    fromDb: (buffer) => iconv.decode(buffer, 'win1252'),
+    toDb: (value) => iconv.encode(value, 'win1252')
+  }
+};
+
+const db = await Fb.attach({
+  database: 'legacy_none.fdb',
+  user: 'SYSDBA',
+  password: 'masterkey',
+  charset: 'NONE',
+  transcodeAdapter
+});
+
+const rows = await db.query("SELECT memo FROM history WHERE memo LIKE '%€%'");
+console.log(rows); // Shows proper JS strings even though stored bytes are WIN1252
+```
+
+If you omit the adapter while charset is `"NONE"`, the driver still exposes raw `Buffer` bytes for TEXT/VARYING columns and BLOB SUB_TYPE 1 so you can decode them yourself. You may also provide adapters for other charsets if you need custom handling beyond Firebird's built-in encodings.
+
 ### Classic
 
 ```js
@@ -294,19 +326,24 @@ Firebird.attach(options, function(err, db) {
 
 ### READING BLOBS (ASYNCHRONOUS)
 
+> It is highly recommended to fetch blobs sequentially. Even if this is not the most optimal approach for performance, I’ve noticed that the library can run into race conditions, causing the process to hang.
+
 ```js
-// async (only with transaction)
+// async  (only with transaction) - sample 1
 Firebird.attach(options, function(err, db) {
 
     if (err)
         throw err;
-    db.transaction(function(err, transaction) {    
+    db.transaction(function(err, transaction) {
         // db = DATABASE
-        db.query('SELECT ID, ALIAS, USERPICTURE FROM USER', function(err, rows) {
-
+        db.query('SELECT ID, ALIAS, USERPICTURE, BLOB2 FROM USER', function(err, rows) {
+            // TODO: always handle eventual errors by rolling back changes and closing your connection
             if (err)
                 throw err;
 
+            // ⚠️ I highly recommend performing operations like this sequentially—wait for one to finish before starting the next.
+            //    doing otherwise may result in unexpected race conditions  
+            
             // first row
             rows[0].userpicture(function(err, name, e) {
 
@@ -330,6 +367,58 @@ Firebird.attach(options, function(err, db) {
         });
     });
 });
+
+// async (only with transaction) - sample 2 (with utility function `readBlob`)
+Firebird.attach(options, function(err, db) {
+
+    if (err)
+        throw err;
+    db.transaction(function(err, transaction) {    
+        // db = DATABASE
+        db.query('SELECT ID, ALIAS, USERPICTURE, BLOB2 FROM USER', async function(err, rows) {
+            // TODO: always handle eventual errors by rolling back changes and closing your connection
+            if (err)
+                throw err;
+            
+            let i = 0;
+            for (let row of rows) {
+                for (let blobCol of ['USERPICTURE','BLOB2']) {
+                    // ⚠️ I highly recommend performing operations like this sequentially—wait for one to finish before starting the next.
+                    //    doing otherwise may result in unexpected race conditions
+                    rows[blobCol] = await readBlob(blobCol, blobCol, i);
+                }
+                i++;
+            }
+        });
+    });
+});
+
+
+
+/**
+ * Utility function to handle blob fetching.
+ * It reads a single blob field and returns a promise
+ */
+function readBlob(blobFn, columnName, rowIndex) {
+    return new Promise((resolve, reject) => {
+        const args = [];
+        blobFn((err, name, event) => {
+            if (err) return reject(err);
+
+            const chunks = [];
+            event.on('data', chunk => {
+                chunks.push(Buffer.from(chunk));
+            });
+            event.on('end', () => {
+                resolve({ buffer: Buffer.concat(chunks), column: columnName, row: rowIndex });
+            });
+            event.on('error', reject);
+        });
+    });
+}
+
+
+// ---------------------------------------
 
 // sync blob are fetched automatically
 Firebird.attach(options, function(err, db) {
@@ -617,6 +706,4 @@ WireCrypt = Disabled
 [npm-url]: https://npmjs.org/package/node-firebird
 [npm-version-image]: http://img.shields.io/npm/v/node-firebird.svg?style=flat
 [npm-downloads-image]: http://img.shields.io/npm/dm/node-firebird.svg?style=flat
-
-
 
