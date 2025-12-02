@@ -704,6 +704,6 @@ WireCrypt = Disabled
 [license-url]: LICENSE
 
 [npm-url]: https://npmjs.org/package/node-firebird2
-[npm-version-image]: http://img.shields.io/npm/v/node-firebird.svg?style=flat
-[npm-downloads-image]: http://img.shields.io/npm/dm/node-firebird.svg?style=flat
+[npm-version-image]: http://img.shields.io/npm/v/node-firebird2.svg?style=flat
+[npm-downloads-image]: http://img.shields.io/npm/dm/node-firebird2.svg?style=flat
 
