@@ -1,9 +1,9 @@
-![Firebird Logo](https://www.totaljs.com/exports/firebird-logo.png)
+![Firebird Logo](https://www.firebirdsql.org/file/about/firebird-logo-90.png)
 
 [![NPM version][npm-version-image]][npm-url] [![NPM downloads][npm-downloads-image]][npm-url] [![Mozilla License][license-image]][license-url]
-[![Build Status](https://travis-ci.org/mariuz/node-firebird.svg?branch=master)](https://travis-ci.org/mariuz/node-firebird)
 
-[![NPM](https://nodei.co/npm/node-firebird.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-firebird/) [![NPM](https://nodei.co/npm-dl/node-firebird.png?months=6&height=3)](https://nodei.co/npm/node-firebird/)
+
+[![NPM](https://nodei.co/npm/node-firebird2.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-firebird2/) [![NPM](https://nodei.co/npm-dl/node-firebird2.png?months=6&height=3)](https://nodei.co/npm/node-firebird2/)
 # Pure JavaScript Firebird client for Node.js.
 
 Pure JavaScript and Asynchronous Firebird client for Node.js. [Firebird forum](https://groups.google.com/forum/#!forum/node-firebird) on Google Groups.
