@@ -703,7 +703,7 @@ WireCrypt = Disabled
 [license-image]: http://img.shields.io/badge/license-MOZILLA-blue.svg?style=flat
 [license-url]: LICENSE
 
-[npm-url]: https://npmjs.org/package/node-firebird
+[npm-url]: https://npmjs.org/package/node-firebird2
 [npm-version-image]: http://img.shields.io/npm/v/node-firebird.svg?style=flat
 [npm-downloads-image]: http://img.shields.io/npm/dm/node-firebird.svg?style=flat
 
