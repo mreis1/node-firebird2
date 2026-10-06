@@ -36,6 +36,33 @@ const connectOpts = {
 const con = await Fb.attach(connectOpts)
 await con.query(query)
 
+### Connection resilience
+
+```js
+const connectOpts = {
+    // ...
+    keepAlive: true,            // default. TCP keepalive on the data socket: a peer that
+                                // vanished without FIN/RST is detected by the OS probes and
+                                // the socket closes. Without it a half-open socket never
+                                // emits 'close' and every queued call waits forever.
+    keepAliveDelayMs: 30000,    // default. Delay before the first probe.
+    socketTimeoutMs: 0,         // default off. Hard inactivity timeout; only enable it when
+                                // every statement you run is bounded.
+    maxReconnectAttempts: 3,    // default. 0 = no reconnect: queued calls fail at once with
+                                // "Connection is closed." and 'destroy' is emitted, so a pool
+                                // can replace the connection instead of waiting on retries.
+}
+
+const con = await Fb.attach(connectOpts)
+con.isClosed            // true once the socket is gone — cheap enough for a pool validate()
+con.lastError           // last socket-level error (ECONNRESET, ETIMEDOUT, ...), if any
+con.original.on('destroy', () => { /* evict from your pool */ })
+```
+
+A socket 'error' is emitted on the driver `Database`; a no-op listener is installed on
+every creation path, so an unhandled socket error no longer becomes an uncaught exception.
+Add your own listener to log it.
+
 const tx = await con.transaction(new Isolation({ mode: 'read',.... }));
 
 const rows1 = await tx.query('SELECT FIRST 1 1 FROM RDB$DATABASE);
