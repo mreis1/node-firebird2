@@ -87,6 +87,11 @@ declare module 'node-firebird2' {
         query(query: string, params: any[], callback: QueryCallback): void;
         execute(query: string, params: any[], callback: QueryCallback): void;
         sequentially(query: string, params: any[], rowCallback: SequentialCallback, callback: SimpleCallback, asArray?: boolean): void;
+        /** Remaining reconnect attempts (see Options.maxReconnectAttempts). */
+        maxtryreconnect: number;
+        /** Last socket-level error seen on this connection (ECONNRESET, ETIMEDOUT, ...). */
+        lastError?: Error;
+        on(event: 'error' | 'destroy' | 'detach' | 'reconnect' | 'attach' | string, listener: (...args: any[]) => void): this;
     }
 
     export interface Transaction {
@@ -140,6 +145,25 @@ declare module 'node-firebird2' {
         pageSize?: number;
         encoding?: SupportedCharacterSet;
         transcodeAdapter?: TranscodeAdapter;
+        /**
+         * TCP keepalive on the data socket (default true). Detects a peer that vanished
+         * without closing the connection; without it a half-open socket never emits
+         * 'close' and queued calls wait forever.
+         */
+        keepAlive?: boolean;
+        /** Delay before the first keepalive probe, in ms (default 30000). */
+        keepAliveDelayMs?: number;
+        /**
+         * Hard inactivity timeout on the socket, in ms. Off by default: a long-running
+         * statement is silent on the wire, so enable it only when every call is bounded.
+         */
+        socketTimeoutMs?: number;
+        /**
+         * Reconnect attempts after the socket closes (default 3). 0 disables the
+         * reconnect: queued calls fail immediately with "Connection is closed." and
+         * 'destroy' is emitted, so a pool can replace the connection.
+         */
+        maxReconnectAttempts?: number;
     }
 
     export interface TranscodeAdapter {
@@ -177,6 +201,12 @@ declare module 'node-firebird2' {
         export function transliterate<T extends boolean>(data: Buffer | string, returnAsBuff: T): T extends true ? Buffer : string;
         export class Db {
             constructor(db: any)
+            /** The driver's Database: events ('error', 'destroy', 'reconnect') and the callback API. */
+            readonly original: Database;
+            /** true once the underlying socket is gone. No round-trip: usable as a pool validate(). */
+            readonly isClosed: boolean;
+            /** Last socket-level error seen on this connection, if any. */
+            readonly lastError: Error | undefined;
             query<T>(sql: string, params?: any[]): Promise<T>;
             detach(): void;
             transaction(isolation: any): Promise<promises.Transaction>;
